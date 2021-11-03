@@ -1,0 +1,82 @@
+apiVersion: "sparkoperator.k8s.io/v1beta1"
+kind: SparkApplication
+metadata:
+  name: {{ usecase }}
+  namespace: cornerstone
+spec:
+  type: Python
+  pythonVersion: "3"
+  mode: cluster
+  image: "docker.io/herbertpinpinc1b/spark-py:latest"
+  imagePullPolicy: Always
+  mainApplicationFile: "local:///opt/usecase/scripts/{{ usecase }}.py"
+  sparkVersion: "3.1.1"
+  restartPolicy:
+    type: Never
+  sparkConf:
+      "spark.kubernetes.driver.volumes.persistentVolumeClaim.usecase.options.claimName": "usecase"
+      "spark.kubernetes.driver.volumes.persistentVolumeClaim.usecase.mount.path": "/opt/usecase"
+      "spark.kubernetes.executor.volumes.persistentVolumeClaim.usecase.options.claimName": "usecase"
+      "spark.kubernetes.executor.volumes.persistentVolumeClaim.usecase.mount.path": "/opt/usecase"
+      "spark.kubernetes.driver.volumes.persistentVolumeClaim.lib.options.claimName": "lib"
+      "spark.kubernetes.driver.volumes.persistentVolumeClaim.lib.mount.path": "/opt/cornerstone/lib"
+      "spark.kubernetes.executor.volumes.persistentVolumeClaim.lib.options.claimName": "lib"
+      "spark.kubernetes.executor.volumes.persistentVolumeClaim.lib.mount.path": "/opt/cornerstone/lib"
+      "spark.kubernetes.driver.volumes.persistentVolumeClaim.hive-data.options.claimName": "data"
+      "spark.kubernetes.driver.volumes.persistentVolumeClaim.hive-data.mount.path": "/data/hive"
+      "spark.kubernetes.executor.volumes.persistentVolumeClaim.hive-data.options.claimName": "data"
+      "spark.kubernetes.executor.volumes.persistentVolumeClaim.hive-data.mount.path": "/data/hive"
+      "spark.kubernetes.driver.volumes.persistentVolumeClaim.landing.options.claimName": "data"
+      "spark.kubernetes.driver.volumes.persistentVolumeClaim.landing.mount.path": "/opt/cornerstone/data"
+      "spark.kubernetes.executor.volumes.persistentVolumeClaim.landing.options.claimName": "data"
+      "spark.kubernetes.executor.volumes.persistentVolumeClaim.landing.mount.path": "/opt/cornerstone/data"
+      "spark.driver.extraClassPath": "local:///opt/cornerstone/lib/spark/"
+      "spark.executor.extraClassPath": "local:///opt/cornerstone/lib/spark/"
+      "spark.extraListeners": "com.hortonworks.spark.atlas.SparkAtlasEventTracker"
+      "spark.sql.queryExecutionListeners": "com.hortonworks.spark.atlas.SparkAtlasEventTracker"
+      "spark.sql.streaming.streamingQueryListeners": "com.hortonworks.spark.atlas.SparkAtlasStreamingQueryEventTracker"
+  driver:
+    cores: 1
+    coreLimit: "1200m"
+    memory: "512m"
+    labels:
+      version: 3.1.1
+    serviceAccount: spark
+    envSecretKeyRefs:
+      AWS_ACCESS_KEY:
+        name: cstonedfs
+        key: AWS_ACCESS_KEY_ID
+      AWS_SECRET_KEY:
+        name: cstonedfs
+        key: AWS_SECRET_ACCESS_KEY
+      BUCKET_HOST:
+        name: cstonedfs
+        key: BUCKET_HOST
+      BUCKET_NAME:
+        name: cstonedfs
+        key: BUCKET_NAME
+      BUCKET_PORT:
+        name: cstonedfs
+        key: BUCKET_PORT
+  executor:
+    cores: 1
+    instances: 1
+    memory: "512m"
+    labels:
+      version: 3.1.1
+    envSecretKeyRefs:
+      AWS_ACCESS_KEY:
+        name: cstonedfs
+        key: AWS_ACCESS_KEY_ID
+      AWS_SECRET_KEY:
+        name: cstonedfs
+        key: AWS_SECRET_ACCESS_KEY    
+      BUCKET_HOST:
+        name: cstonedfs
+        key: BUCKET_HOST
+      BUCKET_NAME:
+        name: cstonedfs
+        key: BUCKET_NAME
+      BUCKET_PORT:
+        name: cstonedfs
+        key: BUCKET_PORT
